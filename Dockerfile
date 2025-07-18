@@ -1,32 +1,43 @@
-# Use lightweight Python base
 FROM python:3.11-slim
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    chromium-driver \
+    chromium \
+    fonts-liberation \
+    libappindicator3-1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libgdk-pixbuf2.0-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    wget \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV CHROME_BIN=/usr/bin/chromium
+ENV PATH="${PATH}:/usr/local/bin"
 
-# Install Chrome
-RUN apt-get update && \
-    apt-get install -y wget unzip gnupg curl && \
-    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
-    rm google-chrome-stable_current_amd64.deb
-
-# Set display port for headless Chrome
-ENV DISPLAY=:99
-
-# Set work directory
+# Create app directory
 WORKDIR /app
 
 # Copy files
-COPY . /app
+COPY . .
 
 # Install Python dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose port
 EXPOSE 5000
 
-# Run app with Gunicorn
-CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:5000"]
+# Start server
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "main:app"]
