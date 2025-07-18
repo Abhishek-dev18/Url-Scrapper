@@ -1,9 +1,11 @@
 FROM python:3.11-slim
 
-# Install system dependencies
+# Install dependencies for Chromium
 RUN apt-get update && apt-get install -y \
     chromium-driver \
     chromium \
+    wget \
+    unzip \
     fonts-liberation \
     libappindicator3-1 \
     libasound2 \
@@ -19,7 +21,6 @@ RUN apt-get update && apt-get install -y \
     libxdamage1 \
     libxrandr2 \
     xdg-utils \
-    wget \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -30,14 +31,14 @@ ENV PATH="${PATH}:/usr/local/bin"
 # Create app directory
 WORKDIR /app
 
-# Copy files
+# Copy project files
 COPY . .
 
-# Install Python dependencies
+# Install Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port
+# Expose the port
 EXPOSE 5000
 
-# Start server
+# Start the app
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "main:app"]
