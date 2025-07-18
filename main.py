@@ -5,23 +5,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-import subprocess
-import os
 
 app = Flask(__name__)
 
-def install_chrome_if_needed():
-    if not os.path.exists("/usr/bin/google-chrome"):
-        subprocess.run(["apt-get", "update"], check=True)
-        subprocess.run(["apt-get", "install", "-y", "wget", "curl", "unzip", "gnupg"], check=True)
-        subprocess.run(["wget", "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"], check=True)
-        subprocess.run(["apt-get", "install", "-y", "./google-chrome-stable_current_amd64.deb"], check=True)
-
 def scrape_gong_transcript(url):
-    install_chrome_if_needed()
-
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
@@ -34,10 +22,10 @@ def scrape_gong_transcript(url):
     chrome_options.add_argument("--disable-images")
     chrome_options.add_argument("--remote-debugging-port=9222")
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
-    chrome_options.binary_location = "/usr/bin/google-chrome"
+    chrome_options.binary_location = "/usr/bin/chromium"
 
     driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
+        service=Service("/usr/bin/chromedriver"),
         options=chrome_options
     )
 
@@ -47,7 +35,6 @@ def scrape_gong_transcript(url):
         transcript_section = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "section.CallTranscript-moduleCLO4Fw[aria-label='Call transcript']"))
         )
-
         soup = BeautifulSoup(driver.page_source, "html.parser")
     finally:
         driver.quit()
